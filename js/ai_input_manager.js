@@ -20,6 +20,7 @@ AIMode = { SMART: 0, RNG: 1 };
 AIInputManager.prototype.mode = AIMode.RNG;
 AIInputManager.prototype.moveTime = 150; // milliseconds
 AIInputManager.prototype.game = null;
+AIInputManager.prototype.stats = [];
 
 AIInputManager.prototype.on = function (event, callback) {
   if (!this.events[event]) {
@@ -38,17 +39,52 @@ AIInputManager.prototype.emit = function (event, data) {
 };
 
 AIInputManager.prototype.listen = function () {
-  var self = this;
-
   // Respond to button presses
   this.bindButtonPress(".retry-button", this.restart);
-  this.bindButtonPress(".keep-playing-button", this.keepPlaying);
 
   // Start running the AI.
   // Wait for a specified time interval before making each move
   // so the AI is watchable
   this.aiID = setInterval(this.nextMove.bind(this), this.moveTime);
 };
+
+if (!Math.log2) {
+  Math.log2 = function(x) {
+    return Math.log(x) / Math.LN2;
+  };
+}
+
+AIInputManager.prototype.updateStats = function() {
+  // Find the highest number achieved.
+  var self = this;
+  var maxValue = 0;
+  this.game.grid.eachCell(function(x, y, tile) {
+    if (tile)
+      maxValue = Math.max(tile.value, maxValue);
+  });
+  var index = Math.round(Math.log2(maxValue));
+  while (index >= this.stats.length) {
+    this.stats.push(0);
+  }
+  this.stats[index] += 1;
+  var total = 0;
+  for (var i = 0; i < this.stats.length; i++) {
+    total += this.stats[i];
+  }
+  
+  // Update the HTML
+  var html = "<div class='stats-header'>Highest numbers:</div>";
+  for (var i = 0; i < this.stats.length; i++) {
+    var percentage = this.stats[i] / total * 100;
+    // Round to 1 decimal place
+    percentage = Math.round(percentage * 10) / 10;
+    if (this.stats[i] > 0) {
+      html += "<div class='stats-number'>" + Math.pow(2, i) + ":</div>";
+      html += "<div class='stats-value'>" + this.stats[i] + " (" + percentage + "%)</div>";
+    }
+  }
+  $(".stats-container").html(html);
+}
 
 AIInputManager.prototype.nextMove = function() {
   var self = this;
@@ -65,6 +101,9 @@ AIInputManager.prototype.nextMove = function() {
 
   // If the game is over, do a longer wait and start again.
   if (this.game.over) {
+    // Update stats
+    this.updateStats();
+    // Wait a bit, then start a new game.
     clearInterval(this.aiID);
     setTimeout(function() {
       self.emit("restart");
