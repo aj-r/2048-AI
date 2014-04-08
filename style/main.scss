@@ -32,7 +32,7 @@ html, body {
 }
 
 body {
-  margin: 80px 0;
+  margin: 30px 0;
 }
 
 // Styles for buttons
@@ -86,6 +86,7 @@ input {
 }
 
 .heading {
+  margin-bottom: 8px;
   @include clearfix;
 }
 
@@ -331,6 +332,31 @@ hr {
     }
   }
 
+  .stats-container {
+    position: absolute;
+    left: 530px;
+    top: 0;
+    width: 200px;
+    height: auto;
+  }
+  .stats-header {
+    font-weight:bold;
+  }
+  .stats-number {
+    float:left;
+    text-align:right;
+    font-weight:bold;
+    width: 70px;
+    padding: 5px;
+    clear: left;
+  }
+  .stats-value {
+    float:left;
+    text-align:left;
+    width: 100px;
+    padding: 5px;
+  }
+
   .grid-container {
     position: absolute;
     z-index: 1;
@@ -415,7 +441,7 @@ hr {
 
   $base: 2;
   $exponent: 1;
-  $limit: 11;
+  $limit: 14;
 
   // Colors for all 11 states, false = no special color
   $special-colors: false false, // 2
@@ -429,6 +455,9 @@ hr {
                    false true, // 512
                    false true, // 1024
                    false true; // 2048
+                   false true; // 4096
+                   false true; // 8192
+                   false true; // 16384
 
   // Build tile colors
   @while $exponent <= $limit {
