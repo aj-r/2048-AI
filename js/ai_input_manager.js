@@ -17,7 +17,7 @@ function AIInputManager() {
 
 AIMode = { RNG: 0, PRIORITY: 1, ALGORITHM: 2, SMART: 3 };
 
-AIInputManager.prototype.mode = AIMode.SMART;
+AIInputManager.prototype.mode = AIMode.ALGORITHM;
 AIInputManager.prototype.moveTime = 100; // milliseconds
 AIInputManager.prototype.game = null;
 AIInputManager.prototype.stats = [];
