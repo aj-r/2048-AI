@@ -81,10 +81,6 @@ GameController.prototype.moveTiles = function (direction) {
       }
     });
   });
-  if (moved && !this.movesAvailable()) {
-    this.over = true; // Game over!
-  }
-
   return moved;
 }
 
@@ -112,6 +108,14 @@ GameController.prototype.moveAvailable = function (direction) {
     }
   }
   return false;
+};
+
+// Adds a tile in a random position
+GameController.prototype.addTile = function (tile) {
+  this.grid.insertTile(tile);
+  if (!this.movesAvailable()) {
+    this.over = true; // Game over!
+  }
 };
 
 // Get the vector representing the chosen direction
@@ -270,7 +274,7 @@ GameManager.prototype.addRandomTile = function () {
     var value = Math.random() < 0.9 ? 2 : 4;
     var tile = new Tile(this.grid.randomAvailableCell(), value);
 
-    this.grid.insertTile(tile);
+    this.addTile(tile);
   }
 };
 
