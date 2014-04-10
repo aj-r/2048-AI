@@ -115,3 +115,8 @@ Grid.prototype.serialize = function () {
     cells: cellState
   };
 };
+
+Grid.prototype.clone = function () {
+  var s = this.serialize();
+  return new Grid(s.size, s.cells);
+};

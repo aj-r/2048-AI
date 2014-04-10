@@ -11,14 +11,14 @@ function AIInputManager() {
     this.eventTouchmove     = "touchmove";
     this.eventTouchend      = "touchend";
   }
-
+  
   this.listen();
 }
 
-AIMode = { SMART: 0, RNG: 1 };
+AIMode = { RNG: 0, PRIORITY: 1, ALGORITHM: 2, SMART: 3 };
 
-AIInputManager.prototype.mode = AIMode.RNG;
-AIInputManager.prototype.moveTime = 150; // milliseconds
+AIInputManager.prototype.mode = AIMode.SMART;
+AIInputManager.prototype.moveTime = 100; // milliseconds
 AIInputManager.prototype.game = null;
 AIInputManager.prototype.stats = [];
 
@@ -86,17 +86,28 @@ AIInputManager.prototype.updateStats = function() {
   $(".stats-container").html(html);
 }
 
-AIInputManager.prototype.nextMove = function() {
-  var self = this;
-  var move = 0;
-  switch (this.mode) {
-    case AIMode.SMART:
-      move = this.nextMoveSmart();
-      break;
+AIInputManager.prototype.setAIMode = function(mode) {
+  switch (mode) {
     case AIMode.RNG:
-      move = this.nextMoveRNG();
+      this.ai = new RNGAI(this.game);
+      break;
+    case AIMode.PRIORITY:
+      this.ai = new PriorityAI(this.game);
+      break;
+    case AIMode.ALGORITHM:
+      this.ai = new AlgorithmAI(this.game);
+      break;
+    case AIMode.SMART:
+      this.ai = new SmartAI(this.game);
       break;
   }
+}
+
+AIInputManager.prototype.nextMove = function() {
+  var self = this;
+  if (!this.ai)
+    this.setAIMode(this.mode);
+  var move = this.ai.nextMove();
   this.emit("move", move);
 
   // If the game is over, do a longer wait and start again.
@@ -110,30 +121,6 @@ AIInputManager.prototype.nextMove = function() {
       self.aiID = setInterval(self.nextMove.bind(self), self.moveTime);
       }, 5000);
   }
-}
-
-AIInputManager.prototype.nextMoveRNG = function() {
-  // Move in a random direction.
-  // TODO: determine which directions are valid
-  return Math.floor(Math.random() * 4);
-}
-
-AIInputManager.prototype.nextMoveSmart = function() {
-  // Determine the best move given the current game state
-  // Use a couple of stragtegies:
-  // 1. Goals:
-  //   - Determine the main goal given the current board state
-  //     (e.g. if the highest number is 64, build it up to 128)
-  //   - Determine sub-goals that must happen to achieve that goal
-  // 2. Planning ahead
-  //   - in some cases, the AI should plan ahead a certain number of
-  //     moves to determine the effect of each possible move it can make.
-  //     If it sees that a certain move will put the board in a bad state
-  //     (i.e. forced to push the wrong direction), then it will avoid that
-  //     move. Alternatively, if it sees a sequence of moves that will 
-  //     accomplish a goal, it will do those moves.
-  var move = 0;
-  return move;
 }
 
 AIInputManager.prototype.restart = function (event) {
