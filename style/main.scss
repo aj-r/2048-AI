@@ -87,6 +87,7 @@ input {
 
 .heading {
   margin-bottom: 8px;
+  width: 600px;
   @include clearfix;
 }
 
@@ -111,8 +112,9 @@ h1.title {
 }
 
 .scores-container {
-  float: right;
-  text-align: right;
+  float: left;
+  text-align: left;
+  margin-left: 10px;
 }
 
 .score-container, .best-container {
@@ -628,6 +630,7 @@ hr {
   }
 
   .heading {
+    width: 600px;
     margin-bottom: 10px;
   }
 

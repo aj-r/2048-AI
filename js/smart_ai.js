@@ -45,7 +45,7 @@ SmartAI.prototype.nextMove = function() {
   // Plan ahead a few moves in every direction and analyze the board state.
   // Go for moves that put the board in a better state.
   // TODO: incorporate goals as well
-  var results = this.planAhead(this.game.grid, 2);
+  var results = this.planAhead(this.game.grid, 3);
   var bestDirection = 0;
   var bestQuality = -1;
   var bestProbability = -1;
@@ -81,15 +81,40 @@ SmartAI.prototype.planAhead = function(grid, numMoves) {
     }
     var result = {quality: -1, probability: 1};
     // Spawn a 2 in all possible locations.
-    // TODO: try spawning 4's as well. 
+    // TODO: try spawning 4's as well? 
     var availableCells = testGrid.availableCells();
+    var worstCells = [];
     for (var i = 0; i < availableCells.length; i++) {
       var testGrid2 = testGrid.clone();
       var testGame2 = new GameController(testGrid2);
       testGame2.addTile(new Tile(availableCells[i], 2));
-      var tileQuality = 0;
-      if (numMoves > 1) {
-        // Plan ahead more moves (recursively)
+      var tileQuality = this.gridQuality(testGrid2);
+      // Compare this grid quality to the grid quality for other tile spawn locations.
+      // Take the WORST quality since we have no control over where the tile spawns,
+      // so assume the worst case scenario.
+      if (result.quality == -1 || tileQuality < result.quality) {
+        result.quality = tileQuality;
+        result.probability = 1 / availableCells.length;
+        worstCells = [availableCells[i]];
+      } else if (tileQuality == result.quality) {
+        result.probability += 1 / availableCells.length;
+        worstCells.push(availableCells[i]);
+      }
+      if (availableCells.length >= grid.size * grid.size / 2) {
+        // If there are a lot of empty cells then don't bother checking every possible location.
+        worstCells = [availableCells[i]];
+        result.probability = 1;
+        break;
+      }
+    }
+    // Plan ahead more moves (recursively) using the worst determined spawn location(s)
+    if (numMoves > 1) {
+      // Reset the result
+      result = {quality: -1, probability: 1};
+      for (var i = 0; i < worstCells.length; i++) {
+        var testGrid2 = testGrid.clone();
+        var testGame2 = new GameController(testGrid2);
+        testGame2.addTile(new Tile(availableCells[i], 2));
         subResults = this.planAhead(testGrid2, numMoves - 1);
         // Choose the sub-result with the BEST quality since that is the direction
         // that would be chosen in that case.
@@ -97,18 +122,12 @@ SmartAI.prototype.planAhead = function(grid, numMoves) {
           if (subResults[j])
             tileQuality = Math.max(tileQuality, subResults[j].quality);
         }
-      } else {
-        // Don't plan any more moves. Just look at the quality of the grid.
-        tileQuality = this.gridQuality(testGrid2);
-      }
-      // Compare this grid quality to the grid quality for other tile spawn locations.
-      // Take the WORST quality since we have no control over where the tile spawns,
-      // so assume the worst case scenario.
-      if (result.quality == -1 || tileQuality < result.quality) {
-        result.quality = tileQuality;
-        result.probability = 1 / availableCells.length;
-      } else if (tileQuality == result.quality) {
-        result.probability += 1 / availableCells.length;
+        if (result.quality == -1 || tileQuality < result.quality) {
+          result.quality = tileQuality;
+          result.probability = 1 / availableCells.length;
+        } else if (tileQuality == result.quality) {
+          result.probability += 1 / availableCells.length;
+        }
       }
     }
     results[d] = result;
@@ -152,10 +171,12 @@ SmartAI.prototype.gridQuality = function(grid) {
   var prevValue = 0;
   var prevEmpty = false;
   var increasing = null;
+  var maxValue = 0;
   
   var scoreCell = function(cell) {
     var tile = grid.cellContent(cell);
     if (tile) {
+      maxValue = Math.max(maxValue, tile.value);
       if (increasing == null || // Not sure if increasing or decreasing yet.
           (increasing && tile.value >= prevValue) ||
           (!increasing && tile.value <= prevValue)) {
@@ -199,9 +220,10 @@ SmartAI.prototype.gridQuality = function(grid) {
     });
   });
   
-  // Now look at number of empty cells
+  // Now look at number of empty cells. More empty cells = better.
   var availableCells = grid.availableCells();
-  var emptyCellWeight = 64;
+  // Determine how to weight the empty cells based on the highest tile on the board.
+  var emptyCellWeight = maxValue / 2;
   var emptyScore = availableCells.length * emptyCellWeight;
   
   var score = monoScore + emptyScore;
