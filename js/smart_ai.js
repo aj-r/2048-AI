@@ -42,11 +42,26 @@ SmartAI.prototype.nextMove = function() {
     }
   }*/
   
-  // TODO: plan ahead a few moves in every direction and analyze the board state.
-  // Go for moves that achieve the goal, but avoid moves that put the board in a bad state.
-  this.planAhead(this.game.grid, 3);
+  // Plan ahead a few moves in every direction and analyze the board state.
+  // Go for moves that put the board in a better state.
+  // TODO: incorporate goals as well
+  var results = this.planAhead(this.game.grid, 2);
+  var bestDirection = 0;
+  var bestQuality = -1;
+  var bestProbability = -1;
+  // Choose the result with the best grid quality.
+  for (i = 0; i < results.length; i++) {
+    if (results[i] == null)
+      continue;
+    if (results[i].quality > bestQuality ||
+        (results[i].quality == bestQuality && results[i].probability > bestProbability)) {
+      bestDirection = i;
+      bestQuality = results[i].quality;
+      bestProbability = results[i].probability;
+    }
+  }
   
-  return 0;
+  return bestDirection;
 };
 
 // Plans a few moves ahead and returns the worst-case scenario grid quality,
@@ -55,16 +70,142 @@ SmartAI.prototype.planAhead = function(grid, numMoves) {
   var results = new Array(4);
   
   // Try each move and see what happens.
-  for (i = 0; i < 4; i++) {
+  for (var d = 0; d < 4; d++) {
     // Work with a clone so we don't modify the original grid.
     var testGrid = grid.clone();
-    //test
+    var testGame = new GameController(testGrid);
+    var moved = testGame.moveTiles(d);
+    if (!moved) {
+      results[d] = null;
+      continue;
+    }
+    var result = {quality: -1, probability: 1};
+    // Spawn a 2 in all possible locations.
+    // TODO: try spawning 4's as well. 
+    var availableCells = testGrid.availableCells();
+    for (var i = 0; i < availableCells.length; i++) {
+      var testGrid2 = testGrid.clone();
+      var testGame2 = new GameController(testGrid2);
+      testGame2.addTile(new Tile(availableCells[i], 2));
+      var tileQuality = 0;
+      if (numMoves > 1) {
+        // Plan ahead more moves (recursively)
+        subResults = this.planAhead(testGrid2, numMoves - 1);
+        // Choose the sub-result with the BEST quality since that is the direction
+        // that would be chosen in that case.
+        for (var j = 0; j < subResults.length; j++) {
+          if (subResults[j])
+            tileQuality = Math.max(tileQuality, subResults[j].quality);
+        }
+      } else {
+        // Don't plan any more moves. Just look at the quality of the grid.
+        tileQuality = this.gridQuality(testGrid2);
+      }
+      // Compare this grid quality to the grid quality for other tile spawn locations.
+      // Take the WORST quality since we have no control over where the tile spawns,
+      // so assume the worst case scenario.
+      if (result.quality == -1 || tileQuality < result.quality) {
+        result.quality = tileQuality;
+        result.probability = 1 / availableCells.length;
+      } else if (tileQuality == result.quality) {
+        result.probability += 1 / availableCells.length;
+      }
+    }
+    results[d] = result;
   }
+  return results;
 }
 
 // Gets the quality of the current state of the grid
 SmartAI.prototype.gridQuality = function(grid) {
+  /* Look at monotonicity in all 4 directions & sum up the scores.
+   * (monoticity = the amount to which a row/column is increasing or decreasing)
+   *
+   * How monoticity is scored (may be subject to modification):
+   * - Traverse down a row / column
+   * - If a tile follows the correct monoticity direction (increasing/decreasing),
+   *   add its value to the current score.
+   *   - However if the tile is immediaty after an empty cell, only add half of the 
+   *     tile's value to the score.
+   * - If a tile goes againt the monoticity direction, subtract from the current score
+   *   the difference between the current tile value and the previous tile value.
+   *   - If an empty cell is found, subtract half of the previous tile's value.
+   *
+   * Examples:
+   *   2     128   64   32
+   *  +2    +128  -64  -32
+   *
+   *   64    128   64   32
+   *  +64   +128  -64  -32
+   *
+   *   128   64   32   32
+   *  +128  +64  +32  +32
+   *
+   *   ___  128   64   32
+   *        +64  +64  +32
+   *
+   *   128   64   32  ___
+   *  +128  +64  +32  -16
+   */
+  var monoScore = 0; // monoticity score
+  var traversals = this.game.buildTraversals({x: -1, y:  0});
+  var prevValue = 0;
+  var prevEmpty = false;
+  var increasing = null;
   
+  var scoreCell = function(cell) {
+    var tile = grid.cellContent(cell);
+    if (tile) {
+      if (increasing == null || // Not sure if increasing or decreasing yet.
+          (increasing && tile.value >= prevValue) ||
+          (!increasing && tile.value <= prevValue)) {
+        // Add to the score
+        monoScore += prevEmpty ? tile.value / 2 : tile.value;
+        if (prevValue != 0 && tile.value != prevValue)
+          increasing = (tile.value > prevValue);
+        
+      } else {
+        // Subtract from the score
+        monoScore -= Math.abs(prevValue - tile.value);
+      }
+      prevValue = tile.value;
+      prevEmpty = false;
+    } else {
+      // This cell is empty
+      if (!prevEmpty) {
+        // Subtract from the score
+        monoScore -= prevValue / 2;
+      }
+      prevEmpty = true; 
+    }
+  };
+  
+  // Traverse each column
+  traversals.x.forEach(function (x) {
+    prevValue = 0;
+    prevEmpty = false;
+    increasing = null;
+    traversals.y.forEach(function (y) {
+      scoreCell({ x: x, y: y });
+    });
+  });
+  // Traverse each row
+  traversals.y.forEach(function (x) {
+    prevValue = 0;
+    prevEmpty = false;
+    increasing = null;
+    traversals.x.forEach(function (y) {
+      scoreCell({ x: x, y: y });
+    });
+  });
+  
+  // Now look at number of empty cells
+  var availableCells = grid.availableCells();
+  var emptyCellWeight = 64;
+  var emptyScore = availableCells.length * emptyCellWeight;
+  
+  var score = monoScore + emptyScore;
+  return score;
 }
 
 // Determine the main (highest level) goal to accomplish for the current grid

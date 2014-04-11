@@ -1,6 +1,8 @@
 function GameController(grid) {
-  if (grid)
+  if (grid) {
+    this.size = grid.size;
     this.grid = grid;
+  }
 }
 
 // Return true if the game is lost, or has won and the user hasn't kept playing
@@ -139,7 +141,7 @@ GameController.prototype.buildTraversals = function (vector) {
     traversals.x.push(pos);
     traversals.y.push(pos);
   }
-
+  
   // Always traverse from the farthest cell in the chosen direction
   if (vector.x === 1) traversals.x = traversals.x.reverse();
   if (vector.y === 1) traversals.y = traversals.y.reverse();
