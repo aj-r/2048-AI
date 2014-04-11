@@ -574,7 +574,7 @@ hr {
   margin-bottom: 0;
 }
 
-.restart-button {
+.pause-button {
   @include button;
   display: block;
   text-align: center;
@@ -642,7 +642,7 @@ hr {
     line-height: 1.65;
   }
 
-  .restart-button {
+  .pause-button {
     width: 42%;
     padding: 0;
     display: block;

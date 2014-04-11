@@ -1,22 +1,11 @@
 function AIInputManager() {
   this.events = {};
-
-  if (window.navigator.msPointerEnabled) {
-    //Internet Explorer 10 style
-    this.eventTouchstart    = "MSPointerDown";
-    this.eventTouchmove     = "MSPointerMove";
-    this.eventTouchend      = "MSPointerUp";
-  } else {
-    this.eventTouchstart    = "touchstart";
-    this.eventTouchmove     = "touchmove";
-    this.eventTouchend      = "touchend";
-  }
-  
   this.listen();
 }
 
 AIMode = { RNG: 0, PRIORITY: 1, ALGORITHM: 2, SMART: 3 };
 
+AIInputManager.prototype.runningAI = false;
 AIInputManager.prototype.mode = AIMode.SMART;
 AIInputManager.prototype.moveTime = 100; // milliseconds
 AIInputManager.prototype.game = null;
@@ -41,11 +30,12 @@ AIInputManager.prototype.emit = function (event, data) {
 AIInputManager.prototype.listen = function () {
   // Respond to button presses
   this.bindButtonPress(".retry-button", this.restart);
+  this.bindButtonPress(".pause-button", this.pauseOrResume);
 
   // Start running the AI.
   // Wait for a specified time interval before making each move
   // so the AI is watchable
-  this.aiID = setInterval(this.nextMove.bind(this), this.moveTime);
+  this.startAI();
 };
 
 if (!Math.log2) {
@@ -115,17 +105,39 @@ AIInputManager.prototype.nextMove = function() {
     // Update stats
     this.updateStats();
     // Wait a bit, then start a new game.
-    clearInterval(this.aiID);
+    this.stopAI();
     setTimeout(function() {
       self.emit("restart");
-      self.aiID = setInterval(self.nextMove.bind(self), self.moveTime);
-      }, 5000);
+      self.startAI();
+    }, 5000);
   }
 }
+
+AIInputManager.prototype.startAI = function() {
+  this.runningAI = true;
+  this.aiID = setInterval(this.nextMove.bind(this), this.moveTime);
+}
+
+AIInputManager.prototype.stopAI = function() {
+  this.runningAI = false;
+  clearInterval(this.aiID);
+}
+
 
 AIInputManager.prototype.restart = function (event) {
   event.preventDefault();
   this.emit("restart");
+};
+
+AIInputManager.prototype.pauseOrResume = function (event) {
+  event.preventDefault();
+  if (this.runningAI) {
+    this.stopAI();
+    $(".pause-button").text("Resume");
+  } else {
+    this.startAI();
+    $(".pause-button").text("Pause");
+  }
 };
 
 AIInputManager.prototype.keepPlaying = function (event) {
