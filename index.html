@@ -35,7 +35,6 @@
 
     <div class="above-game">
       <p>Watch the AI join the numbers and get to the highest tile it can!</p>
-      <a class="pause-button">Pause</a>
     </div>
 
     <div class="game-container">
@@ -78,8 +77,15 @@
 
       </div>
       
-	  <div class="stats-container">
-      	<div class="stats-header">Highest numbers:</div>
+      <div class="ai-panel">
+        <a class="pause-button">Pause</a>
+        <div class="ai-panel-header">AI Mode:</div>
+        <label><input type="radio" name="ai-mode" class="smart-ai-button" checked />Smart</label><br />
+        <label><input type="radio" name="ai-mode" class="algorithm-ai-button" />Algorithm-based</label><br />
+        <label><input type="radio" name="ai-mode" class="priority-ai-button" />Priority-based</label><br />
+        <label><input type="radio" name="ai-mode" class="rng-ai-button" />Random</label><br />
+        <div class="ai-panel-header">Highest numbers:</div>
+        <div class="stats-container"></div>
       </div>
     </div>
 

@@ -28,9 +28,14 @@ AIInputManager.prototype.emit = function (event, data) {
 };
 
 AIInputManager.prototype.listen = function () {
+  //var self = this;
   // Respond to button presses
   this.bindButtonPress(".retry-button", this.restart);
   this.bindButtonPress(".pause-button", this.pauseOrResume);
+  this.bindButtonPress(".smart-ai-button", function() { this.setAIMode(AIMode.SMART); });
+  this.bindButtonPress(".algorithm-ai-button", function() { this.setAIMode(AIMode.ALGORITHM); });
+  this.bindButtonPress(".priority-ai-button", function() { this.setAIMode(AIMode.PRIORITY); });
+  this.bindButtonPress(".rng-ai-button", function() { this.setAIMode(AIMode.RNG); });
 
   // Start running the AI.
   // Wait for a specified time interval before making each move
@@ -63,7 +68,7 @@ AIInputManager.prototype.updateStats = function() {
   }
   
   // Update the HTML
-  var html = "<div class='stats-header'>Highest numbers:</div>";
+  html = "";
   for (var i = 0; i < this.stats.length; i++) {
     var percentage = this.stats[i] / total * 100;
     // Round to 1 decimal place
@@ -77,6 +82,7 @@ AIInputManager.prototype.updateStats = function() {
 }
 
 AIInputManager.prototype.setAIMode = function(mode) {
+  this.mode = mode;
   switch (mode) {
     case AIMode.RNG:
       this.ai = new RNGAI(this.game);

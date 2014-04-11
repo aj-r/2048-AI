@@ -14,7 +14,7 @@ body {
   margin-bottom: 8px;
   width: 600px;  }
 
-input {
+input[type="text"], input[type="button"] {
   display: inline-block;
   background: #8f7a66;
   border-radius: 3px;
@@ -285,14 +285,18 @@ hr {
       -moz-animation-fill-mode: both;
       animation-fill-mode: both; }
 
-.stats-container {
+.ai-panel {
   position: absolute;
   left: 505px;
   top: 0;
   width: 200px;
-  height: auto; }
-.stats-header {
-  font-weight:bold;}
+  height: auto;
+  background-color:#CCC0B9;
+  border-radius: 6px;
+  padding: 10px; }
+.ai-panel-header {
+  font-weight:bold;
+  margin-top: 13px;}
 .stats-number {
   float:left;
   text-align:right;
@@ -598,12 +602,13 @@ hr {
   padding: 0 20px;
   text-decoration: none;
   color: #f9f6f2;
+  width: 90px;
   height: 40px;
   line-height: 42px;
   cursor: pointer;
   display: block;
   text-align: center;
-  float: right; }
+  }
 
 .game-explanation {
   margin-top: 50px; }
