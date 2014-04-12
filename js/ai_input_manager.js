@@ -4,12 +4,17 @@ function AIInputManager() {
 }
 
 AIMode = { RNG: 0, PRIORITY: 1, ALGORITHM: 2, SMART: 3 };
+AISpeed = { FULL: 0, FAST: 1, SLOW: 2 };
 
 AIInputManager.prototype.runningAI = false;
 AIInputManager.prototype.mode = AIMode.SMART;
-AIInputManager.prototype.moveTime = 100; // milliseconds
+AIInputManager.prototype.speed = AISpeed.FAST;
+AIInputManager.prototype.fastMoveTime = 100; // milliseconds
+AIInputManager.prototype.slowMoveTime = 750; // milliseconds
 AIInputManager.prototype.game = null;
 AIInputManager.prototype.stats = [];
+AIInputManager.prototype.stateBufferSize = 3;
+AIInputManager.prototype.prevStates = [];
 
 AIInputManager.prototype.on = function (event, callback) {
   if (!this.events[event]) {
@@ -36,6 +41,12 @@ AIInputManager.prototype.listen = function () {
   this.bindButtonPress(".algorithm-ai-button", function() { this.setAIMode(AIMode.ALGORITHM); });
   this.bindButtonPress(".priority-ai-button", function() { this.setAIMode(AIMode.PRIORITY); });
   this.bindButtonPress(".rng-ai-button", function() { this.setAIMode(AIMode.RNG); });
+  this.bindButtonPress(".full-speed-button", function() { this.setAISpeed(AISpeed.FULL); });
+  this.bindButtonPress(".fast-speed-button", function() { this.setAISpeed(AISpeed.FAST); });
+  this.bindButtonPress(".slow-speed-button", function() { this.setAISpeed(AISpeed.SLOW); });
+  
+  this.bindButtonPress(".copy-button", this.copyStates);
+  this.bindButtonPress(".load-button", this.loadState);
 
   // Start running the AI.
   // Wait for a specified time interval before making each move
@@ -99,6 +110,15 @@ AIInputManager.prototype.setAIMode = function(mode) {
   }
 }
 
+AIInputManager.prototype.setAISpeed = function(speed) {
+  this.speed = speed;
+  // Restart the AI at the new speed.
+  if (this.runningAI) {
+    this.stopAI();
+    this.startAI();
+  }
+}
+
 AIInputManager.prototype.nextMove = function() {
   var self = this;
   if (!this.ai)
@@ -116,12 +136,31 @@ AIInputManager.prototype.nextMove = function() {
       self.emit("restart");
       self.startAI();
     }, 5000);
+  } else if (this.speed == AISpeed.FULL && this.runningAI) {
+    // Call nextMove continuously when in full speed.
+    // Call this function again on a timeout so the browser
+    // has a chance to update the screen
+    setTimeout(this.nextMove.bind(this));
   }
+  if (this.prevStates.length >= this.stateBufferSize) {
+    this.prevStates.shift();
+  }
+  this.prevStates.push(this.game.grid.serialize());
 }
 
 AIInputManager.prototype.startAI = function() {
   this.runningAI = true;
-  this.aiID = setInterval(this.nextMove.bind(this), this.moveTime);
+  switch (this.speed) {
+    case AISpeed.FULL:
+      setTimeout(this.nextMove.bind(this));
+      break;
+    case AISpeed.FAST:
+      this.aiID = setInterval(this.nextMove.bind(this), this.fastMoveTime);
+      break;
+    case AISpeed.SLOW:
+      this.aiID = setInterval(this.nextMove.bind(this), this.slowMoveTime);
+      break;
+  }
 }
 
 AIInputManager.prototype.stopAI = function() {
@@ -151,8 +190,26 @@ AIInputManager.prototype.keepPlaying = function (event) {
   this.emit("keepPlaying");
 };
 
+AIInputManager.prototype.copyStates = function (event) {
+  event.preventDefault();
+  var html = "";
+  for (var i = 0; i < this.prevStates.length; i++) {
+    html += JSON.stringify(this.prevStates[i]) + "<br /><br />";
+  }
+  $(".copy-json").html(html);
+};
+AIInputManager.prototype.loadState = function (event) {
+  var stateJSON = $(".state-input").val();
+  var state = JSON.parse(stateJSON);
+  this.game.grid  = new Grid(state.size, state.cells);
+  // Update the actuator
+  this.game.actuate();
+}
+
 AIInputManager.prototype.bindButtonPress = function (selector, fn) {
   var button = document.querySelector(selector);
+  if (!button)
+    return;
   button.addEventListener("click", fn.bind(this));
   button.addEventListener(this.eventTouchend, fn.bind(this));
 };

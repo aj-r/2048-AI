@@ -297,6 +297,9 @@ hr {
 .ai-panel-header {
   font-weight:bold;
   margin-top: 13px;}
+.stats-container {
+  display: inline-block;
+}
 .stats-number {
   float:left;
   text-align:right;
@@ -609,6 +612,31 @@ hr {
   display: block;
   text-align: center;
   }
+
+.copy-button, .load-button {
+  display: inline-block;
+  background: #8f7a66;
+  border-radius: 3px;
+  padding: 0 20px;
+  text-decoration: none;
+  color: #f9f6f2;
+  width: 100px;
+  height: 40px;
+  line-height: 42px;
+  cursor: pointer;
+  display: block;
+  text-align: center;
+  margin-top: 10px;
+  }
+
+input[type="text"].state-input {
+  width: 200px;
+  margin-top: 10px;
+}
+
+.state-panel {
+  /*display:none;*/
+}
 
 .game-explanation {
   margin-top: 50px; }

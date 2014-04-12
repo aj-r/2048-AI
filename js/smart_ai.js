@@ -170,24 +170,24 @@ SmartAI.prototype.gridQuality = function(grid) {
   var traversals = this.game.buildTraversals({x: -1, y:  0});
   var prevValue = 0;
   var prevEmpty = false;
-  var increasing = null;
   var maxValue = 0;
+  var incScore = 0, decScore = 0;
   
   var scoreCell = function(cell) {
     var tile = grid.cellContent(cell);
     if (tile) {
       maxValue = Math.max(maxValue, tile.value);
-      if (increasing == null || // Not sure if increasing or decreasing yet.
-          (increasing && tile.value >= prevValue) ||
-          (!increasing && tile.value <= prevValue)) {
-        // Add to the score
-        monoScore += prevEmpty ? tile.value / 2 : tile.value;
-        if (prevValue != 0 && tile.value != prevValue)
-          increasing = (tile.value > prevValue);
-        
+      var incDelta = prevEmpty ? tile.value / 4 : tile.value;
+      var decDelta = -Math.abs(prevValue - tile.value);
+      if (prevValue == 0 || prevValue == tile.value) {
+        incScore += incDelta;
+        decScore += incDelta;
+      } else if (tile.value > prevValue) {
+        incScore += incDelta;
+        decScore += decDelta;
       } else {
-        // Subtract from the score
-        monoScore -= Math.abs(prevValue - tile.value);
+        incScore += decDelta;
+        decScore += incDelta;
       }
       prevValue = tile.value;
       prevEmpty = false;
@@ -195,7 +195,8 @@ SmartAI.prototype.gridQuality = function(grid) {
       // This cell is empty
       if (!prevEmpty) {
         // Subtract from the score
-        monoScore -= prevValue / 2;
+        incScore -= prevValue / 2;
+        decScore -= prevValue / 2;
       }
       prevEmpty = true; 
     }
@@ -205,25 +206,29 @@ SmartAI.prototype.gridQuality = function(grid) {
   traversals.x.forEach(function (x) {
     prevValue = 0;
     prevEmpty = false;
-    increasing = null;
+    incScore = 0;
+    decScore = 0;
     traversals.y.forEach(function (y) {
       scoreCell({ x: x, y: y });
     });
+    monoScore += Math.max(incScore, decScore);
   });
   // Traverse each row
   traversals.y.forEach(function (x) {
     prevValue = 0;
     prevEmpty = false;
-    increasing = null;
+    incScore = 0;
+    decScore = 0;
     traversals.x.forEach(function (y) {
       scoreCell({ x: x, y: y });
     });
+    monoScore += Math.max(incScore, decScore);
   });
   
   // Now look at number of empty cells. More empty cells = better.
   var availableCells = grid.availableCells();
   // Determine how to weight the empty cells based on the highest tile on the board.
-  var emptyCellWeight = maxValue / 2;
+  var emptyCellWeight = maxValue / 8;
   var emptyScore = availableCells.length * emptyCellWeight;
   
   var score = monoScore + emptyScore;

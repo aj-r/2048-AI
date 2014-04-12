@@ -17,10 +17,10 @@
   <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0, maximum-scale=1, user-scalable=no, minimal-ui">
   <meta name="format-detection" content="telephone=no" />
 
-  <meta property="og:title" content="2048 game"/>
-  <meta property="og:site_name" content="2048 game"/>
-  <meta property="og:description" content="Join the numbers and get to the 2048 tile! Careful: this game is extremely addictive!"/>
-  <meta property="og:image" content="http://gabrielecirulli.github.io/2048/meta/og_image.png"/>
+  <meta property="og:title" content="2048 AI"/>
+  <meta property="og:site_name" content="2048 AI"/>
+  <meta property="og:description" content="Watch the AI join the numbers and get to the 2048 tile!"/>
+  <meta property="og:image" content="http://aj-r.github.io/2048-AI/meta/og_image.png"/>
 </head>
 <body>
   <script src="js/jquery-1.10.2.min.js"></script>
@@ -84,14 +84,24 @@
         <label><input type="radio" name="ai-mode" class="algorithm-ai-button" />Algorithm-based</label><br />
         <label><input type="radio" name="ai-mode" class="priority-ai-button" />Priority-based</label><br />
         <label><input type="radio" name="ai-mode" class="rng-ai-button" />Random</label><br />
+        <div class="ai-panel-header">Speed:</div>
+        <label><input type="radio" name="ai-speed" class="full-speed-button" />Full</label><br />
+        <label><input type="radio" name="ai-speed" class="fast-speed-button" checked />Fast</label><br />
+        <label><input type="radio" name="ai-speed" class="slow-speed-button" />Slow</label><br />
         <div class="ai-panel-header">Highest numbers:</div>
         <div class="stats-container"></div>
+        <div class="state-panel">
+          <a class="copy-button">Copy last 3</a>
+          <input type="text" class="state-input" />
+          <a class="load-button">Load state</a>
+        </div>
       </div>
     </div>
 
     <p class="game-explanation">
     Created by AJ Richardson. Based on <a href="http://gabrielecirulli.github.io/2048">2048 by Gabriele Cirulli</a> and conceptually similar to <a href="http://asherv.com/threes/" target="_blank">Threes by Asher Vollmer</a>.
     </p>
+    <div class="copy-json"></div>
   </div>
 
   <script src="js/bind_polyfill.js"></script>
