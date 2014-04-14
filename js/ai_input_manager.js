@@ -13,7 +13,7 @@ AIInputManager.prototype.fastMoveTime = 100; // milliseconds
 AIInputManager.prototype.slowMoveTime = 750; // milliseconds
 AIInputManager.prototype.game = null;
 AIInputManager.prototype.stats = [];
-AIInputManager.prototype.stateBufferSize = 3;
+AIInputManager.prototype.stateBufferSize = 10;
 AIInputManager.prototype.prevStates = [];
 
 AIInputManager.prototype.on = function (event, callback) {
