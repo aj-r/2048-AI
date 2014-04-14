@@ -145,3 +145,15 @@ HTMLActuator.prototype.clearMessage = function () {
   this.messageContainer.classList.remove("game-won");
   this.messageContainer.classList.remove("game-over");
 };
+
+HTMLActuator.prototype.rebuildGrid = function (size) {
+  var grid_html = "";
+  for (var i = 0; i < size; i++) {
+    grid_html += "<div class='grid-row'>";
+    for (var j = 0; j < size; j++) {
+      grid_html += "<div class='grid-cell'></div>";
+    }
+    grid_html += "</div>";
+  }
+  $(".grid-container").html(grid_html);
+};

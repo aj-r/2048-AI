@@ -178,11 +178,15 @@ SmartAI.prototype.gridQuality = function(grid) {
    *
    *   128   64   32  ___
    *  +128  +64  +32  -16
+   *
+   *   ___  128  ___  ___
+   *        +64  -32  
    */
   var monoScore = 0; // monoticity score
   var traversals = this.game.buildTraversals({x: -1, y:  0});
   var prevValue = 0;
   var prevEmpty = false;
+  var prevScore = 0;
   var maxValue = 0;
   var incScore = 0, decScore = 0;
   
@@ -190,8 +194,8 @@ SmartAI.prototype.gridQuality = function(grid) {
     var tile = grid.cellContent(cell);
     if (tile) {
       maxValue = Math.max(maxValue, tile.value);
-      var incDelta = prevEmpty ? tile.value / 4 : tile.value;
-      var decDelta = -Math.abs(prevValue - tile.value);
+      var incDelta = prevEmpty ? tile.value / 2 : tile.value;
+      var decDelta = -Math.abs(prevScore - tile.value);
       if (prevValue == 0 || prevValue == tile.value) {
         incScore += incDelta;
         decScore += incDelta;
@@ -204,14 +208,16 @@ SmartAI.prototype.gridQuality = function(grid) {
       }
       prevValue = tile.value;
       prevEmpty = false;
+      prevScore = incDelta;
     } else {
       // This cell is empty
       if (!prevEmpty) {
         // Subtract from the score
-        incScore -= prevValue / 2;
-        decScore -= prevValue / 2;
+        incScore -= prevScore / 2;
+        decScore -= prevScore / 2;
+        prevEmpty = true; 
       }
-      prevEmpty = true; 
+      prevScore = 0;
     }
   };
   
@@ -221,6 +227,7 @@ SmartAI.prototype.gridQuality = function(grid) {
     prevEmpty = false;
     incScore = 0;
     decScore = 0;
+    prevScore = 0;
     traversals.y.forEach(function (y) {
       scoreCell({ x: x, y: y });
     });
@@ -232,6 +239,7 @@ SmartAI.prototype.gridQuality = function(grid) {
     prevEmpty = false;
     incScore = 0;
     decScore = 0;
+    prevScore = 0;
     traversals.x.forEach(function (x) {
       scoreCell({ x: x, y: y });
     });
@@ -241,7 +249,7 @@ SmartAI.prototype.gridQuality = function(grid) {
   // Now look at number of empty cells. More empty cells = better.
   var availableCells = grid.availableCells();
   // Determine how to weight the empty cells based on the highest tile on the board.
-  var emptyCellWeight = maxValue / 2;
+  var emptyCellWeight = maxValue / 8;
   var emptyScore = availableCells.length * emptyCellWeight;
   
   var score = monoScore + emptyScore;
