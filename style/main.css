@@ -635,7 +635,7 @@ input[type="text"].state-input {
 }
 
 .state-panel {
-  /*display:none;*/
+  display:none;
 }
 
 .game-explanation {
