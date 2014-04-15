@@ -9,7 +9,7 @@ AISpeed = { FULL: 0, FAST: 1, SLOW: 2 };
 AIInputManager.prototype.runningAI = false;
 AIInputManager.prototype.mode = AIMode.SMART;
 AIInputManager.prototype.speed = AISpeed.FAST;
-AIInputManager.prototype.fastMoveTime = 100; // milliseconds
+AIInputManager.prototype.fastMoveTime = 200; // milliseconds
 AIInputManager.prototype.slowMoveTime = 750; // milliseconds
 AIInputManager.prototype.game = null;
 AIInputManager.prototype.stats = [];
@@ -33,7 +33,6 @@ AIInputManager.prototype.emit = function (event, data) {
 };
 
 AIInputManager.prototype.listen = function () {
-  //var self = this;
   // Respond to button presses
   this.bindButtonPress(".retry-button", this.restart);
   this.bindButtonPress(".pause-button", this.pauseOrResume);
