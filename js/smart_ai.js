@@ -44,7 +44,6 @@ SmartAI.prototype.nextMove = function() {
   
   // Plan ahead a few moves in every direction and analyze the board state.
   // Go for moves that put the board in a better state.
-  // TODO: incorporate goals as well
   var results = this.planAhead(this.game.grid, 3);
   var bestDirection = 0;
   var bestQuality = -1;
@@ -103,26 +102,27 @@ SmartAI.prototype.planAhead = function(grid, numMoves) {
       var testGrid2 = testGrid.clone();
       var testGame2 = new GameController(testGrid2);
       testGame2.addTile(new Tile(availableCells[i], 2));
-      var tileQuality = 0;
+      var tileResult = { quality: -1, probability: 1 };
       if (numMoves > 1) {
         var subResults = this.planAhead(testGrid2, numMoves - 1);
         // Choose the sub-result with the BEST quality since that is the direction
         // that would be chosen in that case.
         for (var j = 0; j < subResults.length; j++) {
-          if (subResults[j])
-            tileQuality = Math.max(tileQuality, subResults[j].quality);
+          if (subResults[j] && subResults[j].quality > tileResult.quality) {
+            tileResult = subResults[j];
+          }
         }
       } else {
-        tileQuality = this.gridQuality(testGrid2);
+        tileResult.quality = this.gridQuality(testGrid2);
       }
       // Compare this grid quality to the grid quality for other tile spawn locations.
       // Take the WORST quality since we have no control over where the tile spawns,
       // so assume the worst case scenario.
-      if (result.quality == -1 || tileQuality < result.quality) {
-        result.quality = tileQuality;
-        result.probability = 1 / availableCells.length;
-      } else if (tileQuality == result.quality) {
-        result.probability += 1 / availableCells.length;
+      if (result.quality == -1 || tileResult.quality < result.quality) {
+        result.quality = tileResult.quality;
+        result.probability = tileResult.probability / availableCells.length;
+      } else if (tileResult.quality == result.quality) {
+        result.probability += tileResult.probability / availableCells.length;
       }
     }
     results[d] = result;
@@ -172,13 +172,13 @@ SmartAI.prototype.gridQuality = function(grid) {
    * - Add 1/2 of the tile values for tiles on the edges to reward having large tiles on the edges
    *
    * Examples:
-   *   2     128   64   32
-   *  +1.5   +65  -96  -40
-   *  +1.5   -65  +96  +56
+   *   2    128   64   32
+   *  +2    +65  -96  -32
+   *  +2    -65  +96  +64
    
    *  32     64   128    2
-   * +24    +48  +96   -64.5
-   * +24    -48  -96   +65.5
+   * +32    +48  +96   -64
+   * +32    -48  -96   +66
    *
    *   64    128   64   32
    * 
@@ -197,8 +197,8 @@ SmartAI.prototype.gridQuality = function(grid) {
    *        +64    
    *
    *   ___  128  ___  32
-   *        +64      -72
-   *        +64      +88
+   *        +64      -64
+   *        +64      +96
    */
   var monoScore = 0; // monoticity score
   var traversals = this.game.buildTraversals({x: -1, y:  0});
@@ -213,8 +213,6 @@ SmartAI.prototype.gridQuality = function(grid) {
     var tile = grid.cellContent(cell);
     if (tile) {
       maxValue = Math.max(maxValue, tile.value);
-      //var incDelta = prevEmpty ? tile.value / 2 : tile.value;
-      //var decDelta = -Math.abs(prevScore - tile.value);
       var incDelta = (prevValue + tile.value) / 2;
       var decDelta = -incDelta;
       if (prevValue == 0 || prevValue == tile.value) {
@@ -231,19 +229,10 @@ SmartAI.prototype.gridQuality = function(grid) {
       prevEmpty = false;
       prevScore = incDelta;
       if (cellIndex == 0 || cellIndex == grid.size - 1) {
-        // Add 1/4 of the value of the 1st & last cells in each row / column
+        // Add 1/2 of the value of the 1st & last cells in each row / column
         incScore += tile.value / 2;
         decScore += tile.value / 2;
       }
-    } else {
-      // This cell is empty
-      /*if (!prevEmpty) {
-        // Subtract from the score
-        incScore -= prevScore / 2;
-        decScore -= prevScore / 2;
-        prevEmpty = true; 
-      }
-      prevScore = 0;*/
     }
     cellIndex++;
   };
