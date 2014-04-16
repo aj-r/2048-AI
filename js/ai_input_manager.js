@@ -5,10 +5,12 @@ function AIInputManager() {
 
 AIMode = { RNG: 0, PRIORITY: 1, ALGORITHM: 2, SMART: 3 };
 AISpeed = { FULL: 0, FAST: 1, SLOW: 2 };
+TileGenerator = { RANDOM: 0, EVIL: 1 };
 
 AIInputManager.prototype.runningAI = false;
 AIInputManager.prototype.mode = AIMode.SMART;
 AIInputManager.prototype.speed = AISpeed.FAST;
+AIInputManager.prototype.tileGenerator = TileGenerator.RANDOM;
 AIInputManager.prototype.fastMoveTime = 200; // milliseconds
 AIInputManager.prototype.slowMoveTime = 750; // milliseconds
 AIInputManager.prototype.game = null;
@@ -43,6 +45,8 @@ AIInputManager.prototype.listen = function () {
   this.bindButtonPress(".full-speed-button", function() { this.setAISpeed(AISpeed.FULL); });
   this.bindButtonPress(".fast-speed-button", function() { this.setAISpeed(AISpeed.FAST); });
   this.bindButtonPress(".slow-speed-button", function() { this.setAISpeed(AISpeed.SLOW); });
+  this.bindButtonPress(".random-tile-button", function() { this.setTileGenerator(TileGenerator.RANDOM); });
+  this.bindButtonPress(".evil-tile-button", function() { this.setTileGenerator(TileGenerator.EVIL); });
   
   this.bindButtonPress(".copy-button", this.copyStates);
   this.bindButtonPress(".load-button", this.loadState);
@@ -115,6 +119,18 @@ AIInputManager.prototype.setAISpeed = function(speed) {
   if (this.runningAI) {
     this.stopAI();
     this.startAI();
+  }
+}
+
+AIInputManager.prototype.setTileGenerator = function(gen) {
+  this.tileGenerator = gen;
+  switch (gen) {
+    case TileGenerator.RANDOM:
+      this.game.generateTile = this.game.addRandomTile;
+      break;
+    case TileGenerator.EVIL:
+      this.game.generateTile = this.game.addEvilTile;
+      break;
   }
 }
 

@@ -132,53 +132,24 @@ SmartAI.prototype.planAhead = function(grid, numMoves) {
 
 // Gets the quality of the current state of the grid
 SmartAI.prototype.gridQuality = function(grid) {
-  /* Look at monotonicity in all 4 directions & sum up the scores.
-   * (monoticity = the amount to which a row/column is increasing or decreasing)
+  /* Look at monotonicity of each row and column and sum up the scores.
+   * (monoticity = the amount to which a row/column is constantly increasing or decreasing)
    *
    * How monoticity is scored (may be subject to modification):
-   * - Traverse down a row / column
-   * - If a tile follows the correct monoticity direction (increasing/decreasing),
-   *   add its value to the current score.
-   *   - However if the tile is immediaty after an empty cell, only add half of the 
-   *     tile's value to the score.
-   * - If a tile goes againt the monoticity direction, subtract from the current score
-   *   the difference between the current tile value and the previous tile value.
-   *   - If an empty cell is found, subtract half of the previous tile's value.
-   *
-   * Examples:
-   *   2     128   64   32
-   *  +2    +128  -64  -32
-   *
-   *   64    128   64   32
-   *  +64   +128  -64  -32
-   *
-   *   128   64   32   32
-   *  +128  +64  +32  +32
-   *
-   *   ___  128   64   32
-   *        +64  +64  +32
-   *
-   *   128   64   32  ___
-   *  +128  +64  +32  -16
-   *
-   *   ___  128  ___  ___
-   *        +64  -32  
-   *
-   * NEW STRAT:
    * - If a tile follows the correct monoticity direction (increasing/decreasing),
    *   score += (current_tile_value + prev_tile_value) / 2
    * - If a tile goes againt the monoticity direction:
    *   score -= (current_tile_value + prev_tile_value) / 2
-   * - Add 1/2 of the tile values for tiles on the edges to reward having large tiles on the edges
+   * - Add the tile values for tiles on the edges to reward having large tiles on the edges
    *
    * Examples:
    *   2    128   64   32
-   *  +2    +65  -96  -32
-   *  +2    -65  +96  +64
+   *  +3    +65  -96  -16
+   *  +3    -65  +96  +80
    
    *  32     64   128    2
-   * +32    +48  +96   -64
-   * +32    -48  -96   +66
+   * +32    +48  +96   -63
+   * +32    -48  -96   +67
    *
    *   64    128   64   32
    * 
@@ -197,8 +168,8 @@ SmartAI.prototype.gridQuality = function(grid) {
    *        +64    
    *
    *   ___  128  ___  32
-   *        +64      -64
-   *        +64      +96
+   *        +64      -48
+   *        +64     +112
    */
   var monoScore = 0; // monoticity score
   var traversals = this.game.buildTraversals({x: -1, y:  0});
@@ -229,9 +200,9 @@ SmartAI.prototype.gridQuality = function(grid) {
       prevEmpty = false;
       prevScore = incDelta;
       if (cellIndex == 0 || cellIndex == grid.size - 1) {
-        // Add 1/2 of the value of the 1st & last cells in each row / column
-        incScore += tile.value / 2;
-        decScore += tile.value / 2;
+        // Add the value of the 1st & last cells in each row / column
+        incScore += tile.value;
+        decScore += tile.value;
       }
     }
     cellIndex++;
