@@ -78,8 +78,8 @@ SmartAI.prototype.planAhead = function(grid, numMoves) {
       results[d] = null;
       continue;
     }
-    var result = {quality: -1, probability: 1};
     // Spawn a 2 in all possible locations.
+    var result = {quality: -1, probability: 1};
     var availableCells = testGrid.availableCells();
     for (var i = 0; i < availableCells.length; i++) {
       // Assume that the worst spawn location is adjacent to an existing tile,
@@ -136,86 +136,60 @@ SmartAI.prototype.gridQuality = function(grid) {
    * (monoticity = the amount to which a row/column is constantly increasing or decreasing)
    *
    * How monoticity is scored (may be subject to modification):
-   * - If a tile follows the correct monoticity direction (increasing/decreasing),
-   *   score += (current_tile_value + prev_tile_value) / 2
-   * - If a tile goes againt the monoticity direction:
-   *   score -= (current_tile_value + prev_tile_value) / 2
-   * - Add the tile values for tiles on the edges to reward having large tiles on the edges
+   *   score += current_tile_value
+   *   -> If a tile goes againt the monoticity direction:
+   *      score -= max(current_tile_value, prev_tile_value)
    *
    * Examples:
-   *   2    128   64   32
-   *  +3    +65  -96  -16
-   *  +3    -65  +96  +80
+   *   2    128    64   32
+   *  +2     +0   +64  +32
    
    *  32     64   128    2
-   * +32    +48  +96   -63
-   * +32    -48  -96   +67
-   *
-   *   64    128   64   32
-   * 
+   * +32    +64  +128 -126
    *
    *   128   64   32   32
+   *  +128  +64  +32  +32
    * 
-   *
    *   ___  128   64   32
-   *  
+   *    +0   +0  +64  +32
    *
    *   128   64   32  ___
-   *  +
+   *  +128  +64  +32
    *
    *   ___  128  ___  ___
-   *        +64    
-   *        +64    
+   *         +0
    *
    *   ___  128  ___  32
-   *        +64      -48
-   *        +64     +112
+   *         +0      +32
    */
   var monoScore = 0; // monoticity score
   var traversals = this.game.buildTraversals({x: -1, y:  0});
-  var prevValue = 0;
-  var prevEmpty = false;
-  var prevScore = 0;
+  var prevValue = -1;
   var maxValue = 0;
   var incScore = 0, decScore = 0;
-  var cellIndex = 0;
   
   var scoreCell = function(cell) {
     var tile = grid.cellContent(cell);
+    var tileValue = 0;
     if (tile) {
-      maxValue = Math.max(maxValue, tile.value);
-      var incDelta = (prevValue + tile.value) / 2;
-      var decDelta = -incDelta;
-      if (prevValue == 0 || prevValue == tile.value) {
-        incScore += incDelta;
-        decScore += incDelta;
-      } else if (tile.value > prevValue) {
-        incScore += incDelta;
-        decScore += decDelta;
-      } else {
-        incScore += decDelta;
-        decScore += incDelta;
-      }
-      prevValue = tile.value;
-      prevEmpty = false;
-      prevScore = incDelta;
-      if (cellIndex == 0 || cellIndex == grid.size - 1) {
-        // Add the value of the 1st & last cells in each row / column
-        incScore += tile.value;
-        decScore += tile.value;
+      tileValue = tile.value;
+      maxValue = Math.max(maxValue, tileValue);
+    }
+    incScore += tileValue;
+    if (tileValue <= prevValue || prevValue == -1) {
+      decScore += tileValue;
+      if (tileValue < prevValue) {
+        incScore -= prevValue;
       }
     }
-    cellIndex++;
+    prevValue = tileValue;
   };
   
   // Traverse each column
   traversals.x.forEach(function (x) {
-    prevValue = 0;
-    prevEmpty = false;
+    prevValue = -1;
     incScore = 0;
     decScore = 0;
-    prevScore = 0;
-    cellIndex = 0;
     traversals.y.forEach(function (y) {
       scoreCell({ x: x, y: y });
     });
@@ -223,12 +197,9 @@ SmartAI.prototype.gridQuality = function(grid) {
   });
   // Traverse each row
   traversals.y.forEach(function (y) {
-    prevValue = 0;
-    prevEmpty = false;
+    prevValue = -1;
     incScore = 0;
     decScore = 0;
-    prevScore = 0;
-    cellIndex = 0;
     traversals.x.forEach(function (x) {
       scoreCell({ x: x, y: y });
     });

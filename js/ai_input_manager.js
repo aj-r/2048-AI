@@ -191,6 +191,9 @@ AIInputManager.prototype.restart = function (event) {
 
 AIInputManager.prototype.pauseOrResume = function (event) {
   event.preventDefault();
+  if (this.game.over) {
+    return;
+  }
   if (this.runningAI) {
     this.stopAI();
     $(".pause-button").text("Resume");
