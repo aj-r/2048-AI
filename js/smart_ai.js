@@ -129,20 +129,24 @@ SmartAI.prototype.planAhead = function(grid, numMoves, originalQuality) {
 SmartAI.prototype.chooseBestMove = function(results, originalQuality) {
   // Choose the move with the least probability of decreasing the grid quality.
   // If multiple results have the same probability, choose the one with the best quality.
-  var bestResult = {
-    quality: -1,
-    probability: 1,
-    qualityLoss: originalQuality,
-    direction: 0
-  }
+  var bestResult;
   for (i = 0; i < results.length; i++) {  
     if (results[i] == null)
       continue;
-    if ((bestResult.qualityLoss == -1 || results[i].qualityLoss < bestResult.qualityLoss) ||
+    if (!bestResult ||
+        results[i].qualityLoss < bestResult.qualityLoss ||
         (results[i].qualityLoss == bestResult.qualityLoss && results[i].quality > bestResult.quality) ||
         (results[i].qualityLoss == bestResult.qualityLoss && results[i].quality == bestResult.quality && results[i].probability < bestResult.probability)) {
       bestResult = results[i];
     }
+  }
+  if (!bestResult) {
+    bestResult = {
+      quality: -1,
+      probability: 1,
+      qualityLoss: originalQuality,
+      direction: 0
+    };
   }
   return bestResult;
 }
