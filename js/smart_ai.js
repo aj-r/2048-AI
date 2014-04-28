@@ -44,17 +44,17 @@ SmartAI.prototype.nextMove = function() {
   
   // Plan ahead a few moves in every direction and analyze the board state.
   // Go for moves that put the board in a better state.
-  var currentQuality = this.gridQuality(this.game.grid);
-  var results = this.planAhead(this.game.grid, 3, currentQuality);
+  var originalQuality = this.gridQuality(this.game.grid);
+  var results = this.planAhead(this.game.grid, 3, originalQuality);
   // Choose the best result
-  var bestResult = this.chooseBestMove(results, currentQuality);
+  var bestResult = this.chooseBestMove(results, originalQuality);
   
   return bestResult.direction;
 };
 
 // Plans a few moves ahead and returns the worst-case scenario grid quality,
 // and the probability of that occurring, for each move
-SmartAI.prototype.planAhead = function(grid, numMoves, currentQuality) {
+SmartAI.prototype.planAhead = function(grid, numMoves, originalQuality) {
   var results = new Array(4);
   
   // Try each move and see what happens.
@@ -98,16 +98,16 @@ SmartAI.prototype.planAhead = function(grid, numMoves, currentQuality) {
       testGame2.addTile(new Tile(availableCells[i], 2));
       var tileResult;
       if (numMoves > 1) {
-        var subResults = this.planAhead(testGrid2, numMoves - 1, currentQuality);
+        var subResults = this.planAhead(testGrid2, numMoves - 1, originalQuality);
         // Choose the sub-result with the BEST quality since that is the direction
         // that would be chosen in that case.
-        tileResult = this.chooseBestMove(subResults, currentQuality);
+        tileResult = this.chooseBestMove(subResults, originalQuality);
       } else {
         var tileQuality = this.gridQuality(testGrid2);
         tileResult = {
           quality: tileQuality,
           probability: 1,
-          qualityLoss: Math.max(currentQuality - tileQuality, 0)
+          qualityLoss: Math.max(originalQuality - tileQuality, 0)
         };
       }
       // Compare this grid quality to the grid quality for other tile spawn locations.
@@ -126,13 +126,13 @@ SmartAI.prototype.planAhead = function(grid, numMoves, currentQuality) {
   return results;
 }
 
-SmartAI.prototype.chooseBestMove = function(results, currentQuality) {
+SmartAI.prototype.chooseBestMove = function(results, originalQuality) {
   // Choose the move with the least probability of decreasing the grid quality.
   // If multiple results have the same probability, choose the one with the best quality.
   var bestResult = {
     quality: -1,
     probability: 1,
-    qualityLoss: currentQuality,
+    qualityLoss: originalQuality,
     direction: 0
   }
   for (i = 0; i < results.length; i++) {  
