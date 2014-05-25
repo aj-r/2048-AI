@@ -1,0 +1,73 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <title>2048 AI unit tests</title>
+  <link href="style/main.css" rel="stylesheet  " type="text/css" /> <style > body {
+    margin: 50px;
+  }
+
+  .table {
+    width: 1000px;
+  }
+
+  .row {
+    float: left;
+    clear: left;
+    margin-top: 8px;
+    border-bottom: #DDD 1px solid;
+  }
+
+  .col1 {
+    width: 300px;
+    float: left;
+  }
+
+  .col2 {
+    width: 700px;
+    float: left;
+  }
+
+  .success {
+    color: #090;
+  }
+
+  .fail {
+    color: #900;
+  }
+
+  .head {
+    font-weight: bold;
+    color: #333;
+  }
+  .note {
+    float: left;
+    clear: left;
+    margin-bottom: 16px;
+    font-size: 0.8em;
+  }
+  </style>
+</head>
+<body>
+  <div class="table">
+    <div class="row head">
+      <div class="col1">Test</div>
+      <div class="col2">Result</div>
+    </div>
+  </div>
+
+  <script src="js/jquery-1.10.2.min.js" type="text/javascript"></script>
+  <script src="js/bind_polyfill.js"></script>
+  <script src="js/classlist_polyfill.js"></script>
+  <script src="js/animframe_polyfill.js"></script>
+  <script src="js/basic_ai.js"></script>
+  <script src="js/smart_ai.js"></script>
+  <script src="js/ai_input_manager.js"></script>
+  <script src="js/html_actuator.js"></script>
+  <script src="js/grid.js"></script>
+  <script src="js/tile.js"></script>
+  <script src="js/local_storage_manager.js"></script>
+  <script src="js/game_manager.js"></script>
+  <script src="js/test.js" type="text/javascript"></script>
+  <script src="js/aitests.js" type="text/javascript"></script>
+</body>
+</html>
