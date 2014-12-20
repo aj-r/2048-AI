@@ -4,10 +4,11 @@
   var unitTests = {
 
     testLog2: function () {
-      assert.equal(1, ai.log2(2));
-      assert.equal(0, ai.log2(1));
       assert.equal(0, ai.log2(0));
+      assert.equal(0, ai.log2(1));
+      assert.equal(1, ai.log2(2));
       assert.equal(3, ai.log2(8));
+      assert.equal(8, ai.log2(256));
       assert.equal(11, ai.log2(2048));
       assert.equal(13, ai.log2(8192));
     },
@@ -90,14 +91,30 @@
            2,   2,   0,  0,  
            0,   0,   0,  0
       ]);
-      assert.less(
-        ai.getGoalEase(grid1, { x: 3, y: 0 }, { x: 0, y: 1 }),
-        ai.getGoalEase(grid2, { x: 3, y: 0 }, { x: 0, y: 1 }),
-        "Intermediate goal ease test 1 failed");
       assert.equal(
         ai.getGoalEase(grid1, { x: 2, y: 1 }, { x: 0, y: 1 }),
         ai.getGoalEase(grid2, { x: 2, y: 1 }, { x: 0, y: 1 }),
+        "Intermediate goal ease test 1 failed");
+      assert.less(
+        ai.getGoalEase(grid1, { x: 3, y: 0 }, { x: 0, y: 1 }),
+        ai.getGoalEase(grid2, { x: 3, y: 0 }, { x: 0, y: 1 }),
         "Intermediate goal ease test 2 failed");
+      grid1 = createGrid([
+        1024, 512, 256, 128,
+          16,  32,  32,  64,
+           0,   0,   0,   0,
+           0,   0,   0,   0
+      ]);
+      grid2 = createGrid([
+        2048, 512, 256, 128,
+           0,   0,   4,   8,
+           0,   0,   0,   0,
+           0,   0,   0,   0
+      ]);
+      assert.equal(
+        ai.getGoalEase(grid1, { x: 3, y: 0 }, { x: 0, y: 1 }),
+        ai.getGoalEase(grid2, { x: 3, y: 0 }, { x: 0, y: 1 }),
+        "Intermediate goal ease test 3 failed");
     },
 
     testGoalEase_ReducedSpace: function() {
